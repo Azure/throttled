@@ -11,17 +11,17 @@ FROM rust:1-buster as build
 # create dummy application for dependency caching
 RUN USER=root cargo new --bin throttled
 WORKDIR /throttled
+COPY Cargo.lock Cargo.lock
+COPY Cargo.toml Cargo.toml
 
 RUN rustup toolchain install nightly
 
 # download + compile dependencies for caching
-COPY Cargo.toml Cargo.lock ./
 RUN cargo +nightly build --release
 RUN rm src/*.rs
 
-# build for real
-COPY src ./src
-RUN rm ./target/release/deps/throttled*
+ADD src src
+
 RUN cargo +nightly build --release
 
 RUN wc -c target/release/throttled | numfmt --to=iec-i
