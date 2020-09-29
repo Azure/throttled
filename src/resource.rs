@@ -65,9 +65,9 @@ pub async fn get_vm_sku(
         .await?
         .value
         .into_iter()
-        .filter(|sku| sku.resource_type == "virtualMachines")
-        .filter(|sku| sku.locations.len() > 0 && sku.locations[0] == location)
-        .filter(|sku| sku.name == name)
+        .filter(|sku| sku.resource_type.eq_ignore_ascii_case("virtualMachines"))
+        .filter(|sku| sku.locations.len() > 0 && sku.locations[0].eq_ignore_ascii_case(location))
+        .filter(|sku| sku.name.eq_ignore_ascii_case(name))
         .map(|sku| VirtualMachine::try_from(sku))
         .collect::<Result<Vec<VirtualMachine>>>()?;
 
@@ -92,8 +92,8 @@ pub async fn list_disk_skus(
         .await?
         .value
         .into_iter()
-        .filter(|sku| sku.resource_type == "disks")
-        .filter(|sku| sku.locations.len() > 0 && sku.locations[0] == location)
+        .filter(|sku| sku.resource_type.eq_ignore_ascii_case("disks"))
+        .filter(|sku| sku.locations.len() > 0 && sku.locations[0].eq_ignore_ascii_case(location))
         .filter(|res| res.tier != Some("Ultra".to_string())) // Need to support ultra, it has different range-based structure
         .map(|sku| Disk::try_from(sku))
         .collect::<Result<Vec<Disk>>>()
@@ -102,7 +102,7 @@ pub async fn list_disk_skus(
 pub fn get_disk_sku(skus: &Vec<Disk>, size: &u64, storage_account_type: &str) -> Result<Disk> {
     let mut filtered = skus
         .iter()
-        .filter(|sku| &sku.storage_account_type == storage_account_type)
+        .filter(|sku| sku.storage_account_type.eq_ignore_ascii_case(storage_account_type))
         .filter(|sku| size > &sku.min_size_gb && size <= &sku.max_size_gb)
         .cloned()
         .collect::<Vec<Disk>>();
